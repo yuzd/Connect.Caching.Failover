@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>SS.Architecture.Logging</id>
+    <version>2.0.185.0</version>
+    <authors>Sporting Solutions Ltd.</authors>
+    <owners>Sporting Solutions Ltd.</owners>
+    <licenseUrl>http://www.sportingsolutions.com/</licenseUrl>
+    <projectUrl>http://www.sportingsolutions.com/</projectUrl>
+    <iconUrl>https://dl.dropbox.com/u/30149716/SS/nugetPackageLogo.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Logging library</description>
+    <copyright>Copyright 2013 Sporting Solutions</copyright>
+    <dependencies>
+      <dependency id="SS.Architecture.Logging.Contract" version="[2.0, 3.0)" />
+      <dependency id="log4net" version="2.0.0" />
+    </dependencies>
+  </metadata>
+</package>
