@@ -24,6 +24,15 @@ namespace SS.Architecture.Cache.Redis.Configuration
         [XmlElement("cachePrefix")]
         public string RedisCacheKeyPrefix { get; set; }
 
+        [XmlElement("MaxReadPoolSize")]
+        public int MaxReadPoolSize { get; set; }
+        
+        [XmlElement("MaxWritePoolSize")]
+        public int MaxWritePoolSize { get; set; }
+
+        [XmlElement("PoolTimeOut")]
+        public int PoolTimeOut { get; set; }
+
         [XmlAttribute]
         public bool UseCache { get; set; }
 

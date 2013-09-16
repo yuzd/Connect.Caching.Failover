@@ -45,6 +45,7 @@
     <Compile Include="Caching\Monitoring\ISentinelClient.cs" />
     <Compile Include="Caching\Monitoring\ISentinelClientsManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\IMapper.cs" />
     <Compile Include="Serialization\ISerializer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

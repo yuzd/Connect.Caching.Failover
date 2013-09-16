@@ -1,13 +1,9 @@
 ﻿using System.Configuration;
 using SS.Architecture.Cache.Redis.Exceptions;
 using ServiceStack.Redis;
-using SS.Architecture.Interfaces.Caching;
 using SS.Architecture.Cache.Redis.Extensions;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SS.Architecture.Cache.Redis.Sentinel;
 
 namespace SS.Architecture.Cache.Redis
 {
@@ -48,9 +44,9 @@ namespace SS.Architecture.Cache.Redis
         {
             if (IsSentinelModeAvailable)
             {
-                var master = SentinelClientsManager.GetActiveSentinel().GetMasterByAddressName(_masterAddressName);
+                var master = SentinelClientsManager.GetRedisClient(_masterAddressName);
                 if (master == null) { throw new RedisCommunicationException(string.Format("No master found for address {0}.", _masterAddressName)); }
-                return new RedisClient(master.Item1, master.Item2);
+                return master;
             }
 
             if (IsRedisModelAvailable)
@@ -67,13 +63,9 @@ namespace SS.Architecture.Cache.Redis
         {
             if (IsSentinelModeAvailable)
             {
-                var slaves = SentinelClientsManager.GetActiveSentinel().GetSlavesByAddressName(_masterAddressName).ToArray();
-                if (!slaves.Any())
-                {
-                    return GetRedisClient();
-                }
-                var selectedSlave = slaves.First();
-                return new RedisClient(selectedSlave.Item1, selectedSlave.Item2);
+                var slave = SentinelClientsManager.GetReadOnlyRedisClient(_masterAddressName);
+                if (slave == null) { throw new RedisCommunicationException(string.Format("No slave found for address {0}.", _masterAddressName)); }
+                return slave;
             }
 
             if (IsRedisModelAvailable)

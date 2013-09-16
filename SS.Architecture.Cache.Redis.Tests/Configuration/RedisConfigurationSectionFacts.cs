@@ -23,5 +23,6 @@ namespace SS.Architecture.Cache.Redis.Tests
             Assert.AreEqual("95.138.180.8", firstSentinel.IpAddress);
             Assert.AreEqual("26379", firstSentinel.Port);
         }
+
     }
 }

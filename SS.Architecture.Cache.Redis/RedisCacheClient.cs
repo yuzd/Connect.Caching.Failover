@@ -1,6 +1,6 @@
 ﻿using ServiceStack.Redis;
+using SS.Architecture.Cache.Redis.Sentinel;
 using SS.Architecture.Interfaces.Caching;
-using SS.Architecture.Interfaces.Caching.Monitoring;
 using SS.Architecture.Interfaces.Serialization;
 using SS.Architecture.Logging.Contract;
 using System;
@@ -14,9 +14,9 @@ namespace SS.Architecture.Cache.Redis
     {
         protected readonly ISerializer Serializer;
         protected readonly ILogger Logger;
-        protected readonly ISentinelClientsManager SentinelClientsManager;
+        protected readonly RedisSentinelClientsManager SentinelClientsManager;
 
-        public RedisCacheClient(ILogger logger, ISerializer serializer, ICacheConfig cacheConfig, ISentinelClientsManager sentinelClientsManager)
+        public RedisCacheClient(ILogger logger, ISerializer serializer, ICacheConfig cacheConfig, RedisSentinelClientsManager sentinelClientsManager)
         {
             Contract.Assert(cacheConfig != null, "Cache Configuration cannot be null!");
             Contract.Assert(logger != null);
@@ -52,7 +52,7 @@ namespace SS.Architecture.Cache.Redis
         /// <returns></returns>
         public T Get<T>(string key, string keyPrefix, Type inheritedType)
         {
-            key = string.Format("{0}{1}", keyPrefix, key);
+            key = FormatKey(key, keyPrefix);
             return Get<T>(key, inheritedType);
         }
 
@@ -224,6 +224,17 @@ namespace SS.Architecture.Cache.Redis
         /// <returns></returns>
         public bool SetExpiry(string key, string keyPrefix, TimeSpan expireIn)
         {
+            return SetExpiry(FormatKey(key, keyPrefix), expireIn);
+        }
+
+        /// <summary>
+        /// Sets the expiry.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="expireIn">The expire information.</param>
+        /// <returns></returns>
+        private bool SetExpiry(string key, TimeSpan expireIn)
+        {
             var result = false;
 
             if (Config.UseCache)
@@ -258,7 +269,7 @@ namespace SS.Architecture.Cache.Redis
                 {
                     using (var client = GetRedisClient())
                     {
-                        client.Set(key, Serializer.SerializeObject(value));
+                        client.Set(FormatKey(key, keyPrefix), Serializer.SerializeObject(value));
                     }
                 }
                 catch (Exception ex)
@@ -284,7 +295,7 @@ namespace SS.Architecture.Cache.Redis
                 {
                     using (var client = GetRedisClient())
                     {
-                        client.Set(key, Serializer.SerializeObject(value), expireIn);
+                        client.Set(FormatKey(key, keyPrefix), Serializer.SerializeObject(value), expireIn);
                     }
                 }
                 catch (Exception ex)
@@ -305,7 +316,7 @@ namespace SS.Architecture.Cache.Redis
             {
                 try
                 {
-                    key = keyPrefix + key;
+                    key = FormatKey(key, keyPrefix);
                     using (var client = GetRedisClient())
                     {
                         client.Remove(key);
@@ -329,7 +340,7 @@ namespace SS.Architecture.Cache.Redis
             {
                 using (var client = GetRedisClient())
                 {
-                    keyPattern = keyPrefix + keyPattern;
+                    keyPattern = FormatKey(keyPattern, keyPrefix);
                     try
                     {
                         var keys = client.SearchKeys(keyPattern);
@@ -354,7 +365,7 @@ namespace SS.Architecture.Cache.Redis
             long value = 0;
             if (Config.UseCache)
             {
-                key = keyPrefix + key;
+                key = FormatKey(key, keyPrefix);
                 try
                 {
                     using (var client = GetRedisClient())
@@ -366,7 +377,7 @@ namespace SS.Architecture.Cache.Redis
                 {
                     Logger.LogError("IncrementValue threw Exception.", ex, "key", key);
                 }
-                
+
             }
             return value;
         }
@@ -401,5 +412,15 @@ namespace SS.Architecture.Cache.Redis
 
         public ICacheConfig Config { get; private set; }
 
+        /// <summary>
+        /// Formats the key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="prefix">The prefix.</param>
+        /// <returns></returns>
+        private string FormatKey(string key, string prefix)
+        {
+            return string.Format("{0}{1}", prefix, key);
+        }
     }
 }

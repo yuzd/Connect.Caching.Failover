@@ -15,6 +15,7 @@ namespace Connect.RedisFailover.TestApp
     {
         static void Main(string[] args)
         {
+           
             var cacheConfig = ((RedisCacheConfigSectionHandler)ConfigurationManager.GetSection("redisCacheConfigSection")).RedisCacheConfig;
             var logger = new SS.Architecture.Logging.ConsoleLogger();
 
@@ -25,7 +26,7 @@ namespace Connect.RedisFailover.TestApp
             var cacheClient = new RedisCacheClient(logger, serializer, cacheConfig, redisSentinelManager);
 
 
-            var list = new[] { 1, };//2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            var list = new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
             Parallel.ForEach(list, x =>
             {
@@ -33,13 +34,13 @@ namespace Connect.RedisFailover.TestApp
                 while (true)
                 {
                     var key = "Test" + x;
-                    cacheClient.Set(key, "", keyValue.ToString());
+                    cacheClient.Set(key, cacheConfig.RedisCacheKeyPrefix, keyValue.ToString());
 
-                    var value = cacheClient.Get<string>(key, "");
+                    var value = cacheClient.Get<string>(key, cacheConfig.RedisCacheKeyPrefix);
                     Console.WriteLine("Key:{0} Value:{1}", key, value);
                     
                     keyValue++;
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10);
                 }
             });
 

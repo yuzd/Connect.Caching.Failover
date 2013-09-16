@@ -1,17 +1,15 @@
-﻿using ServiceStack.Redis;
+﻿using System.Net;
 using ServiceStack.Text;
 using SS.Architecture.Interfaces.Caching.Monitoring;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 
-
 namespace SS.Architecture.Cache.Redis.Sentinel
 {
-    public class RedisSentinelClient : RedisClient, ISentinelClient
+    public class RedisSentinelClient : MonitoredRedisClient, ISentinelClient
     {
         public RedisSentinelClient()
-            : base()
         {
 
         }
@@ -33,7 +31,6 @@ namespace SS.Architecture.Cache.Redis.Sentinel
         {
 
         }
-
 
         public Tuple<string, int> GetMasterByAddressName(string addressName)
         {
@@ -65,7 +62,14 @@ namespace SS.Architecture.Cache.Redis.Sentinel
                     {
                         return false;
                     }
+                    
+                    //Suppress any corrupted data coming from sentinel where slave ip comes up as loopback.
+                    if (IPAddress.Loopback.Equals(IPAddress.Parse(x[SentinelInfoFields.Ip]))) { return false; }
 
+                    if (x[SentinelInfoFields.MasterLinkStatus] != SentinelInfoValues.Ok)
+                    {
+                        return false;
+                    }
                     return true;
                 })
                 .OrderBy(x => Convert.ToInt32(x[SentinelInfoFields.SlavePriority]))
@@ -88,8 +92,7 @@ namespace SS.Architecture.Cache.Redis.Sentinel
         {
             throw new NotImplementedException();
         }
-
-
+        
         private IEnumerable<Dictionary<string, string>> ParseSentinelResult(IEnumerable<object> stream)
         {
             var result = new List<Dictionary<string, string>>();
@@ -107,6 +110,16 @@ namespace SS.Architecture.Cache.Redis.Sentinel
             }
 
             return result;
+        }
+        
+        protected override void Dispose(bool disposing)
+        {
+            if (ClientsManager != null)
+            {
+                ClientsManager.DisposeSentinelClient(this);
+                return;
+            }
+            base.Dispose(disposing);
         }
     }
 }
